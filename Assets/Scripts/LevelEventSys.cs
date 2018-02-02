@@ -42,10 +42,11 @@ public class LevelEventSys : MonoBehaviour
     {
         // Inititalizes scene var values.
         Time.timeScale = 1;
+        TimeScaleSetToOne();
         pauseMenuActive = false;
-        lives = 3;
+        lives = 3; 
         screenRect = new Rect(0, 0, Screen.width, Screen.height);
-        exitRect = new Rect(-400, -400, Screen.width + 400, Screen.height + 400);
+        exitRect = new Rect(-400, -400, Screen.width + 800, Screen.height + 800);
         shapesEntered = new bool[levelShapes.Length];
 
         shapesLeftText = GameObject.Find("shapesLeftVal").GetComponent<Text>();
@@ -81,6 +82,7 @@ public class LevelEventSys : MonoBehaviour
             winCanvas.enabled = true;
 
             Time.timeScale = 0;
+            TimeScaleSetToZero();
             levelWonBool = true;
         }
     }
@@ -88,6 +90,7 @@ public class LevelEventSys : MonoBehaviour
     void PauseScene()
     {
         Time.timeScale = 0;
+        TimeScaleSetToZero();
         Canvas pauseCanvas = GameObject.Find("PauseCanvas").GetComponent<Canvas>();
         pauseCanvas.enabled = true;
 
@@ -97,6 +100,7 @@ public class LevelEventSys : MonoBehaviour
     void UnPauseScene()
     {
         Time.timeScale = 1;
+        TimeScaleSetToOne();
         Canvas pauseCanvas = GameObject.Find("PauseCanvas").GetComponent<Canvas>();
         Canvas achievCanvas = GameObject.Find("AchievementsCanvas").GetComponent<Canvas>();
         Canvas optionsCanvas = GameObject.Find("OptionsCanvas").GetComponent<Canvas>();
@@ -111,6 +115,7 @@ public class LevelEventSys : MonoBehaviour
     void LoseScene()
     {
         Time.timeScale = 0;
+        TimeScaleSetToZero();
         levelLostBool = true;
 
         Canvas pauseCanvas = GameObject.Find("PauseCanvas").GetComponent<Canvas>();
@@ -122,6 +127,18 @@ public class LevelEventSys : MonoBehaviour
         achievCanvas.enabled = false;
         optionsCanvas.enabled = false;
         gameOverCanvas.enabled = true;
+    }
+
+    public void TimeScaleSetToZero()
+    {
+        Toggle ffToggle = GameObject.Find("fastForwardToggle").GetComponent<Toggle>();
+        ffToggle.interactable = false;
+    }
+
+    public void TimeScaleSetToOne()
+    {
+        Toggle ffToggle = GameObject.Find("fastForwardToggle").GetComponent<Toggle>();
+        ffToggle.interactable = true;
     }
 
     public void RetryLevelFromPause()

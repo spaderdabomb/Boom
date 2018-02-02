@@ -160,6 +160,28 @@ public class ButtonMethods : MonoBehaviour
         }
     }
 
+    public void ToggleFastForward()
+    {
+        if (!(Time.timeScale == 0))
+        {
+            Sprite ffOff = Resources.Load<Sprite>("Sprites/Common/fastforward-white");
+            Sprite ffOn = Resources.Load<Sprite>("Sprites/Common/fastforward-gray");
+            Toggle ffToggle = GameObject.Find("fastForwardToggle").GetComponent<Toggle>();
+            Image ffImg = GameObject.Find("fastForwardImage").GetComponent<Image>();
+
+            if (ffToggle.isOn == true)
+            {
+                ffImg.sprite = ffOff;
+                Time.timeScale = 1;
+            }
+            else
+            {
+                ffImg.sprite = ffOn;
+                Time.timeScale = 2;
+            }
+        }
+    }
+
     public void Retrylevel()
     {
         int levelNum = GameManager.instance.curLevel;

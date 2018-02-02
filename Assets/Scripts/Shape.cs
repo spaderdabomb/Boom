@@ -12,6 +12,12 @@ public class Shape : MonoBehaviour {
     private float shapeFrequency;
     private float teleportDist;
     private float blinkTime;
+    private float hexFreq;
+    private float hexAmp;
+    private float hexMoveSpeed;
+    private float triFreq;
+    private float triAmp;
+    private float triMoveSpeed;
 
     private int timeOffset;
 
@@ -28,6 +34,20 @@ public class Shape : MonoBehaviour {
     public void SetShapeFreq(float setFreq)
     {
         shapeFrequency = setFreq;
+    }
+
+    public void SetTriangleProperties(float freq, float amp, float moveSpeed)
+    {
+        triFreq = freq;
+        triAmp = amp;
+        triMoveSpeed = moveSpeed;
+    }
+
+    public void SetHexProperties(float freq, float amp, float moveSpeed)
+    {
+        hexFreq = freq;
+        hexAmp = amp;
+        hexMoveSpeed = moveSpeed;
     }
 
     public void SetShapeTeleport(float distance, int time)
@@ -83,30 +103,21 @@ public class Shape : MonoBehaviour {
         // Update shape per frame.
         if ((int)Time.timeScale == 1)
         {
-            float frequency;
-            float amplitude;
-            float moveSpeed;
             int currTime;
 
             switch (this.shapeGeometry)
             {
                 case "hexagon":
-                    frequency = 5.0f;
-                    amplitude = 5.0f;
-                    moveSpeed = 3.0f;
                     Vector3 pos = transform.position;
                     Vector3 axis = transform.right;
-                    pos += transform.up * Time.deltaTime * moveSpeed;
-                    transform.position = pos + axis * Mathf.Sin(Time.time * frequency) * amplitude;
+                    pos += transform.up * Time.deltaTime * hexMoveSpeed;
+                    transform.position = pos + axis * Mathf.Sin(Time.time * hexFreq) * hexAmp;
                     break;
                 case "triangle":
-                    frequency = 7.0f;
-                    amplitude = 10.0f;
-                    moveSpeed = 5.0f;
                     Vector3 posTri = transform.position;
                     Vector3 axisTri = transform.up;
-                    posTri += transform.up * Time.deltaTime * moveSpeed;
-                    transform.position = posTri + axisTri * Mathf.Sin(Time.time * frequency) * amplitude;
+                    posTri += transform.up * Time.deltaTime * triMoveSpeed;
+                    transform.position = posTri + axisTri * Mathf.Sin(Time.time * triFreq) * triAmp;
                     break;
                 case "star":
                     currTime = (int)(Time.time);
