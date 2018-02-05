@@ -9,7 +9,11 @@ public class LevelManager : MonoBehaviour
     public static LevelManager level_manager = null;
 
     private int[] levelSettings;
+
     private string[] shapeArr;
+
+    private float screenScaling;
+    private float totalSpeedX;
 
     public GameObject circleWhite;
 
@@ -21,8 +25,9 @@ public class LevelManager : MonoBehaviour
             Destroy(gameObject);
 
         DontDestroyOnLoad(gameObject);
+        screenScaling = Screen.width / 808.0f;
     }
-
+ 
 
     public void InitLevel(int levelNum, out GameObject[] shapeHolder, out int[] levelData, out int[] allShapeHits)
     {
@@ -37,27 +42,26 @@ public class LevelManager : MonoBehaviour
         float avgShapeHits = totalShapeHits / levelData[0];
 
         // Initializes each shape with various properties.
+        totalSpeedX = 0;
         for (int i = 0; i < levelData[0]; i++)
         {
             GameObject newObj = MakeShapeObj(mainCanvas, i);
 
             // Randomly assigns position to objects.
             float waveMultiplier = (float)Math.Round(Random.Range(1.0f, (float)levelData[6]));
-            print(waveMultiplier);
-            float startPosX = 2 * waveMultiplier * (Screen.width / 2 + Random.Range(400.0f, 1200.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1));
-            float startPosY = 2 * waveMultiplier * (Screen.height / 2 + Random.Range(300.0f, 700.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1));
+            float startPosX = screenScaling * (2 * waveMultiplier * (Screen.width / 2 + Random.Range(500.0f, 1200.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1)));
+            float startPosY = screenScaling * (2 * waveMultiplier * (Screen.height / 2 + Random.Range(400.0f, 700.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1)));
             Vector3 pos = new Vector3(startPosX, startPosY, 0);
             newObj.transform.position = pos;
 
             allShapeHits[i] = SetShapeHits(newObj, totalShapeHits, levelData, allShapeHits[i], avgShapeHits, i);
             SetShapeScale(newObj, levelData);
-            SetShapeCollider(newObj);
+            //SetShapeCollider(newObj);
             SetShapeColors(newObj, allShapeHits[i]);
-            SetShapeVelocity(newObj, startPosX, startPosY, allShapeHits[i], levelData[3], levelData[4]);
+            SetShapeVelocity(newObj, startPosX, startPosY, allShapeHits[i], levelData[2], levelData[4]);
 
             shapeHolder[i] = newObj;
         }
-
     }
 
     private GameObject MakeShapeObj(GameObject mainCanvas, int index)
@@ -83,11 +87,11 @@ public class LevelManager : MonoBehaviour
             case "triangle":
                 newObj = Instantiate(Resources.Load("Prefabs/triangleWhite")) as GameObject;
                 newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(50, 500);
-                newObj.GetComponent<Shape>().SetTriangleProperties(Random.Range(4.0f, 7.0f), Random.Range(2.0f, 4.0f), Random.Range(5.0f, 8.0f));
+                newObj.GetComponent<Shape>().SetTriangleProperties(Random.Range(8.0f, 14.0f), Random.Range(4.0f, 8.0f), Random.Range(10.0f, 16.0f));
                 break;
             case "hexagon":
                 newObj = Instantiate(Resources.Load("Prefabs/hexagonWhite")) as GameObject;
-                newObj.GetComponent<Shape>().SetHexProperties(Random.Range(3.0f, 6.0f), Random.Range(3.0f, 5.0f), Random.Range(2.0f, 4.0f));
+                newObj.GetComponent<Shape>().SetHexProperties(Random.Range(6.0f, 12.0f), Random.Range(6.0f, 10.0f), Random.Range(4.0f, 8.0f));
                 break;
             case "star":
                 newObj = Instantiate(Resources.Load("Prefabs/starWhite")) as GameObject;
@@ -234,26 +238,34 @@ public class LevelManager : MonoBehaviour
     private void SetShapeVelocity(GameObject newObj, float startPosX, float startPosY, int shapeHits, int levelSpeed, int shapeDensity)
     {
         // Sets velocity.
-        float overallScaleFactor = 1 / 50.0f;
+        float levelMultiplier = 1.0f + 0.2f * levelSpeed;
+        float overallScaleFactor = 1 / (50.0f);
+        float screenVelScaleFact = 1.0f / screenScaling;
         float shapeSizeSpeedMultiplier = 1 - Mathf.CeilToInt(newObj.transform.localScale.x) / 10;
         float shapeHitsSpeedMultiplier = (float)(1 / (1 + (shapeHits * 0.5)));
-        float speedMultiplier = (Random.Range(1000, 2000) / 20.0f) * levelSpeed * shapeHitsSpeedMultiplier * shapeSizeSpeedMultiplier;
-        float normalizeSpeedX = Math.Abs((startPosX - Screen.width / 2) / (startPosY - Screen.height / 2));
+        float speedMultiplier = ((Random.Range(1000, 2000) / 20.0f) * levelMultiplier * shapeHitsSpeedMultiplier * shapeSizeSpeedMultiplier);
+        float normalizeSpeedX = (Math.Abs((startPosX - Screen.width / 2) / (startPosY - Screen.height / 2)));
         float normalizeSpeedY = 1;
-        float distFromCenterX = Random.Range(-Screen.width / 4, Screen.width / 4);
-        float distFromCenterY = Random.Range(-Screen.height / 4, Screen.height / 4);
-        float normalizeFactorX = -(startPosX - Screen.width / 2 + distFromCenterX) / Math.Abs(startPosX - Screen.width / 2) * (50.0f / shapeDensity);
-        float normalizeFactorY = -(startPosY - Screen.height / 2 + distFromCenterY) / Math.Abs(startPosY - Screen.height / 2) * (50.0f / shapeDensity);
-        float velocityX = normalizeSpeedX * normalizeFactorX * speedMultiplier * overallScaleFactor;
-        float velocityY = normalizeSpeedY * normalizeFactorY * speedMultiplier * overallScaleFactor;
+        float distFromCenterX = Random.Range(-Screen.width / 4, Screen.width / 4); // no scaling
+        float distFromCenterY = Random.Range(-Screen.height / 4, Screen.height / 4); // no scaling
+        float normalizeFactorX = -((startPosX - Screen.width / 2 + distFromCenterX) / Math.Abs(startPosX - Screen.width / 2) * (50.0f / shapeDensity));
+        float normalizeFactorY = -((startPosY - Screen.height / 2 + distFromCenterY) / Math.Abs(startPosY - Screen.height / 2) * (50.0f / shapeDensity));
+        float velocityX = normalizeSpeedX * normalizeFactorX * speedMultiplier * overallScaleFactor * screenScaling;
+        float velocityY = normalizeSpeedY * normalizeFactorY * speedMultiplier * overallScaleFactor * screenScaling;
 
-        while ((Math.Abs(velocityX) < 20) || (Math.Abs(velocityY) < 20))
+        while ((Math.Abs(velocityX) < 35 * screenScaling) || (Math.Abs(velocityY) < 35 * screenScaling))
         {
             velocityX *= 2;
             velocityY *= 2;
         }
+        while ((Math.Abs(velocityX) > 300 * screenScaling) || (Math.Abs(velocityY) > 300 * screenScaling))
+        {
+            velocityX /= 2;
+            velocityY /= 2;
+        }
 
         newObj.transform.GetComponent<Rigidbody2D>().velocity = new Vector2(velocityX, velocityY);
+        totalSpeedX += Math.Abs(velocityX);
     }
 
     private void SetShapeColors(GameObject newObj, int shapeHits)
@@ -282,6 +294,9 @@ public class LevelManager : MonoBehaviour
                 break;
             case 7:
                 shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
+                break;
+            case 8:
+                shapeColor = new Color(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
                 break;
         }
 
@@ -314,9 +329,8 @@ public class LevelManager : MonoBehaviour
         switch (levelNum)
         {
             case 1:
-                levelSettings = new int[] { 30, 30, 1, 1, 1, 0, 1 };
+                levelSettings = new int[] { 24, 24, 1, 1, 1, 0, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle"};
@@ -338,7 +352,7 @@ public class LevelManager : MonoBehaviour
                                       "circle"};
                 break;
             case 4:
-                levelSettings = new int[] { 50, 100, 1, 1, 4, 1, 1 };
+                levelSettings = new int[] { 50, 100, 5, 1, 2, 1, 2 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -350,7 +364,7 @@ public class LevelManager : MonoBehaviour
                                       "circle", "circle"};
                 break;
             case 5:
-                levelSettings = new int[] { 40, 120, 1, 1, 4, 1, 1 };
+                levelSettings = new int[] { 40, 120, 5, 1, 5, 1, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -360,7 +374,7 @@ public class LevelManager : MonoBehaviour
                                       "square", "square", "square", "square" };
                 break;
             case 6:
-                levelSettings = new int[] { 60, 180, 1, 1, 20, 1, 1 };
+                levelSettings = new int[] { 60, 180, 2, 1, 2, 1, 2 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -373,7 +387,7 @@ public class LevelManager : MonoBehaviour
                                       "rect", "rect", "rect", "rect", "rect", "rect"};
                 break;
             case 7:
-                levelSettings = new int[] { 40, 120, 1, 2, 10, 1, 1 };
+                levelSettings = new int[] { 40, 120, 5, 2, 7, 1, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -383,7 +397,7 @@ public class LevelManager : MonoBehaviour
                                       "square", "square", "square", "square" };
                 break;
             case 8:
-                levelSettings = new int[] { 60, 240, 1, 1, 55, 2, 1 };
+                levelSettings = new int[] { 60, 240, 2, 1, 2, 2, 4 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -558,52 +572,72 @@ public class LevelManager : MonoBehaviour
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon" };
                 break;
             case 18:
-                levelSettings = new int[] { 72, 72, 2, 1, 60, 3, 1 };
-                shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "rect", "rect", "rect", "rect", "rect", "rect",
-                                      "square", "square", "square", "square", "square", "square",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "square", "square", "square", "square", "square", "square",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
+                levelSettings = new int[] { 96, 72, 2, 1, 60, 3, 1 };
+                shapeArr = new string[] {"star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "star10", "star10", "star10", "star10", "star10", "star10"};
                 break;
             case 19:
-                levelSettings = new int[] { 72, 72, 2, 1, 60, 3, 1 };
-                shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "rect", "rect", "rect", "rect", "rect", "rect",
-                                      "square", "square", "square", "square", "square", "square",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "square", "square", "square", "square", "square", "square",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
+                levelSettings = new int[] { 114, 72, 2, 1, 60, 3, 1 };
+                shapeArr = new string[] {"lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning"};
                 break;
             case 20:
-                levelSettings = new int[] { 72, 72, 2, 1, 60, 3, 1 };
+                levelSettings = new int[] { 144, 1152, 2, 1, 60, 3, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
+                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
+                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
                                       "rect", "rect", "rect", "rect", "rect", "rect",
-                                      "square", "square", "square", "square", "square", "square",
+                                      "rect", "rect", "rect", "rect", "rect", "rect",
+                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
                                       "square", "square", "square", "square", "square", "square",
+                                      "square", "square", "square", "square", "square", "square",
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star10", "star10", "star10", "star10", "star10", "star10",
+                                      "star", "star", "star", "star", "star", "star",
+                                      "star", "star", "star", "star", "star", "star",
+                                      "ring", "ring", "ring", "ring", "ring", "ring",
+                                      "ring", "ring", "ring", "ring", "ring", "ring",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
+                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow"};
                 break;
         }
     }

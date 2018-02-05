@@ -18,6 +18,10 @@ public class LevelEventSys : MonoBehaviour
     private int shapesLeftVal;
 
     private float[] shapeSizes;
+    private float screenScaling;
+
+    private string shapesLeftStripped;
+    private string scoreTextStripped;
 
     private Rect screenRect;
     private Rect exitRect;
@@ -33,6 +37,7 @@ public class LevelEventSys : MonoBehaviour
         // Intializes level data.
         int curLevel = GameManager.instance.curLevel;
         LevelManager.level_manager.InitLevel(curLevel, out levelShapes, out levelData, out allShapeHits);
+        screenScaling = Screen.width / 808.0f;
         print("Initialized Level: " + curLevel);
 
         InitScene();
@@ -46,16 +51,19 @@ public class LevelEventSys : MonoBehaviour
         pauseMenuActive = false;
         lives = 3; 
         screenRect = new Rect(0, 0, Screen.width, Screen.height);
-        exitRect = new Rect(-400, -400, Screen.width + 800, Screen.height + 800);
+        exitRect = new Rect(-400 * screenScaling, -400 * screenScaling, Screen.width + 800 * screenScaling, Screen.height + 800 * screenScaling);
         shapesEntered = new bool[levelShapes.Length];
 
         shapesLeftText = GameObject.Find("shapesLeftVal").GetComponent<Text>();
-        shapesLeftVal = levelData[0];
-        shapesLeftText.text = shapesLeftVal.ToString();
+        shapesLeftVal = (levelData[0]);
+        shapesLeftText.text = "Shapes Left:   " + shapesLeftVal;
+        shapesLeftStripped = shapesLeftText.text;
 
         scoreText = GameObject.Find("scoreVal").GetComponent<Text>();
         int scoreVal = 0;
-        scoreText.text = scoreVal.ToString();
+        scoreText.text = "Score:   " +  scoreVal.ToString();
+        scoreTextStripped = scoreText.text;
+        scoreTextStripped.Remove(0, 9);
 
         //Image mainCanvas = GameObject.Find("MainCanvas").GetComponent<Image>();
     }
@@ -67,7 +75,7 @@ public class LevelEventSys : MonoBehaviour
         {
             int curLevel = GameManager.instance.curLevel;
             int curLevelHighscore = GameManager.instance.levelHighscores[curLevel - 1];
-            int levelScore = int.Parse(scoreText.text);
+            int levelScore = int.Parse(scoreTextStripped.Remove(0, 9));
             if (curLevelHighscore < levelScore)
             {
                 GameManager.instance.levelHighscores[curLevel - 1] = curLevelHighscore;
@@ -92,6 +100,7 @@ public class LevelEventSys : MonoBehaviour
         Time.timeScale = 0;
         TimeScaleSetToZero();
         Canvas pauseCanvas = GameObject.Find("PauseCanvas").GetComponent<Canvas>();
+        CanvasGroup mainCanvasGroup = GameObject.Find("MainCanvas").GetComponent<CanvasGroup>();
         pauseCanvas.enabled = true;
 
         pauseMenuActive = true;
@@ -99,6 +108,7 @@ public class LevelEventSys : MonoBehaviour
 
     void UnPauseScene()
     {
+
         Time.timeScale = 1;
         TimeScaleSetToOne();
         Canvas pauseCanvas = GameObject.Find("PauseCanvas").GetComponent<Canvas>();
@@ -139,6 +149,7 @@ public class LevelEventSys : MonoBehaviour
     {
         Toggle ffToggle = GameObject.Find("fastForwardToggle").GetComponent<Toggle>();
         ffToggle.interactable = true;
+        ffToggle.isOn = true;
     }
 
     public void RetryLevelFromPause()
@@ -161,13 +172,16 @@ public class LevelEventSys : MonoBehaviour
 
     void EscPressed()
     {
-        if (pauseMenuActive)
+        if (levelWonBool == false && levelLostBool == false)
         {
-            UnPauseScene();
-        }
-        else
-        {
-            PauseScene();
+            if (pauseMenuActive)
+            {
+                UnPauseScene();
+            }
+            else
+            {
+                PauseScene();
+            }
         }
     }
 
@@ -205,9 +219,9 @@ public class LevelEventSys : MonoBehaviour
                 if (!(exitRect.Contains(shapePos)) && shapesEntered[i])
                 {
                     lives -= 1;
-                    int tempVal = int.Parse(shapesLeftText.text);
+                    int tempVal = int.Parse(shapesLeftStripped.Remove(0, 15));
                     tempVal -= 1;
-                    shapesLeftText.text = tempVal.ToString();
+                    shapesLeftText.text = "Shapes Left:   " + tempVal.ToString();
                     switch (lives)
                     {
                         case 2:
@@ -231,7 +245,7 @@ public class LevelEventSys : MonoBehaviour
         }
 
         // Wins the level.
-        shapesLeftVal = int.Parse(shapesLeftText.text);
+        shapesLeftVal = int.Parse(shapesLeftText.text.Remove(0, 15));
         if (shapesLeftVal == 0)
         {
             WinScene();
@@ -248,7 +262,6 @@ public class LevelEventSys : MonoBehaviour
         // Retries level on loss/restarts level on win
         if ((Event.current.Equals(Event.KeyboardEvent("r"))))
         {
-            print("RPressed");
             if (pauseMenuActive) 
             {
                 RPressed("pause");

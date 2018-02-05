@@ -8,7 +8,6 @@ public class Shape : MonoBehaviour {
 
     public int shapeHits;
     public string shapeGeometry;
-
     private float shapeFrequency;
     private float teleportDist;
     private float blinkTime;
@@ -18,6 +17,7 @@ public class Shape : MonoBehaviour {
     private float triFreq;
     private float triAmp;
     private float triMoveSpeed;
+    private float screenScaling;
 
     private int timeOffset;
 
@@ -25,6 +25,11 @@ public class Shape : MonoBehaviour {
     private bool dontMoveUp;
     private bool dontMoveLeft;
     private bool dontMoveDown;
+
+    public void Awake()
+    {
+        screenScaling = Screen.width / 808.0f;
+    }
 
     public void SetupShape(int shapeHitsNew)
     {
@@ -38,21 +43,24 @@ public class Shape : MonoBehaviour {
 
     public void SetTriangleProperties(float freq, float amp, float moveSpeed)
     {
-        triFreq = freq;
-        triAmp = amp;
-        triMoveSpeed = moveSpeed;
+        float globalScale = 0.5f;
+        triFreq = freq * globalScale;
+        triAmp = amp * screenScaling * globalScale;
+        triMoveSpeed = moveSpeed * screenScaling * globalScale;
     }
 
     public void SetHexProperties(float freq, float amp, float moveSpeed)
     {
-        hexFreq = freq;
-        hexAmp = amp;
-        hexMoveSpeed = moveSpeed;
+        float globalScale = 0.5f;
+        hexFreq = freq * globalScale;
+        hexAmp = amp * screenScaling * globalScale;
+        hexMoveSpeed = moveSpeed * screenScaling * globalScale;
+        print(screenScaling);
     }
 
     public void SetShapeTeleport(float distance, int time)
     {
-        teleportDist = distance;
+        teleportDist = distance * screenScaling;
         timeOffset = time;
     }
 
@@ -64,45 +72,45 @@ public class Shape : MonoBehaviour {
     void Update()
     {
         // If clicked.
-        if (Input.GetMouseButtonDown(0))
+        if ((int)Time.timeScale == 1 || (int)Time.timeScale == 2)
         {
-            
-            if (Physics2D.OverlapCircle(Input.mousePosition, 0))
+            if (Input.GetMouseButtonDown(0))
             {
-                Collider2D myCollider = Physics2D.OverlapCircle(Input.mousePosition, 0);
-                GameObject myObj = myCollider.transform.gameObject;
-                Shape myShape = myCollider.GetComponentInParent<Shape>();
 
-                if (GetInstanceID() == myShape.GetInstanceID())
+                if (Physics2D.OverlapCircle(Input.mousePosition, 0))
                 {
-                    myShape.shapeHits -= 1;
-                    if (myShape.shapeHits == 0)
+                    Collider2D myCollider = Physics2D.OverlapCircle(Input.mousePosition, 0);
+                    GameObject myObj = myCollider.transform.gameObject;
+                    Shape myShape = myCollider.GetComponentInParent<Shape>();
+
+                    if (GetInstanceID() == myShape.GetInstanceID())
                     {
-                        Text shapesLeftText = GameObject.Find("shapesLeftVal").GetComponent<Text>();
-                        int shapesLeftVal = int.Parse(shapesLeftText.text);
-                        shapesLeftVal -= 1;
-                        shapesLeftText.text = shapesLeftVal.ToString();
+                        myShape.shapeHits -= 1;
+                        if (myShape.shapeHits == 0)
+                        {
+                            Text shapesLeftText = GameObject.Find("shapesLeftVal").GetComponent<Text>();
+                            int shapesLeftVal = int.Parse(shapesLeftText.text.Remove(0, 15));
+                            shapesLeftVal -= 1;
+                            shapesLeftText.text = "Shapes Left:   " + shapesLeftVal.ToString();
 
-                        Text scoreText = GameObject.Find("scoreVal").GetComponent<Text>();
-                        int scoreVal = int.Parse(scoreText.text);
-                        scoreVal += 100;
-                        scoreText.text = scoreVal.ToString();
+                            Text scoreText = GameObject.Find("scoreVal").GetComponent<Text>();
+                            int scoreVal = int.Parse(scoreText.text.Remove(0, 9));
+                            scoreVal += 100;
+                            scoreText.text = "Score:   " + scoreVal.ToString();
 
-                        Destroy(myObj);
+                            Destroy(myObj);
+                        }
+                        else
+                        {
+                            NewShapeColors(myObj, myShape.shapeHits);
+                        }
+
+                        RectTransform rt = myObj.GetComponent<RectTransform>();
                     }
-                    else 
-                    {
-                        NewShapeColors(myObj, myShape.shapeHits);
-                    }
-
-                    RectTransform rt = myObj.GetComponent<RectTransform>();
                 }
             }
-        }
 
-        // Update shape per frame.
-        if ((int)Time.timeScale == 1)
-        {
+            // Update shape per frame.
             int currTime;
 
             switch (this.shapeGeometry)
@@ -183,6 +191,7 @@ public class Shape : MonoBehaviour {
                     break;
             }
         }
+    
     }
 
     public void NewShapeColors(GameObject newObj, int shapeHits)
@@ -211,6 +220,9 @@ public class Shape : MonoBehaviour {
                 break;
             case 7:
                 shapeColor = new Color(225.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
+                break;
+            case 8:
+                shapeColor = new Color(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
                 break;
         }
 
