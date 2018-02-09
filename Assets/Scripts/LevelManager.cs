@@ -45,7 +45,7 @@ public class LevelManager : MonoBehaviour
         totalSpeedX = 0;
         for (int i = 0; i < levelData[0]; i++)
         {
-            GameObject newObj = MakeShapeObj(mainCanvas, i);
+            GameObject newObj = MakeShapeObj(mainCanvas, i, levelData[3]);
 
             // Randomly assigns position to objects.
             float waveMultiplier = (float)Math.Round(Random.Range(1.0f, (float)levelData[6]));
@@ -53,18 +53,20 @@ public class LevelManager : MonoBehaviour
             float startPosY = screenScaling * (2 * waveMultiplier * (Screen.height / 2 + Random.Range(400.0f, 700.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1)));
             Vector3 pos = new Vector3(startPosX, startPosY, 0);
             newObj.transform.position = pos;
+			print(newObj.GetComponent<RectTransform>().position.z);
 
             allShapeHits[i] = SetShapeHits(newObj, totalShapeHits, levelData, allShapeHits[i], avgShapeHits, i);
             SetShapeScale(newObj, levelData);
             //SetShapeCollider(newObj);
             SetShapeColors(newObj, allShapeHits[i]);
             SetShapeVelocity(newObj, startPosX, startPosY, allShapeHits[i], levelData[2], levelData[4]);
+			FinishingShapeTouches(newObj, levelData[3], i);
 
             shapeHolder[i] = newObj;
         }
     }
 
-    private GameObject MakeShapeObj(GameObject mainCanvas, int index)
+    private GameObject MakeShapeObj(GameObject mainCanvas, int index, int levelDifficulty)
     {
         // Instantiates object in scene with class component "Shape".
         GameObject newObj = new GameObject();
@@ -78,41 +80,30 @@ public class LevelManager : MonoBehaviour
                 break;
             case "rect":
                 newObj = Instantiate(Resources.Load("Prefabs/rectWhite")) as GameObject;
-                newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(50, 500);
-                newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(25, 100);
                 break;
             case "diamond":
                 newObj = Instantiate(Resources.Load("Prefabs/diamondWhite")) as GameObject;
                 break;
             case "triangle":
                 newObj = Instantiate(Resources.Load("Prefabs/triangleWhite")) as GameObject;
-                newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(50, 500);
-                newObj.GetComponent<Shape>().SetTriangleProperties(Random.Range(8.0f, 14.0f), Random.Range(4.0f, 8.0f), Random.Range(10.0f, 16.0f));
                 break;
             case "hexagon":
                 newObj = Instantiate(Resources.Load("Prefabs/hexagonWhite")) as GameObject;
-                newObj.GetComponent<Shape>().SetHexProperties(Random.Range(6.0f, 12.0f), Random.Range(6.0f, 10.0f), Random.Range(4.0f, 8.0f));
                 break;
             case "star":
                 newObj = Instantiate(Resources.Load("Prefabs/starWhite")) as GameObject;
-                newObj.GetComponent<Rigidbody2D>().angularVelocity = 50;
                 break;
             case "ring":
                 newObj = Instantiate(Resources.Load("Prefabs/ringWhite")) as GameObject;
                 break;
             case "star10":
                 newObj = Instantiate(Resources.Load("Prefabs/star10White")) as GameObject;
-                newObj.GetComponent<Rigidbody2D>().angularVelocity = 500.0f;
-                newObj.GetComponent<Shape>().SetShapeFreq(Random.Range(5, 40) / 10.0f);
                 break;
             case "arrow":
                 newObj = Instantiate(Resources.Load("Prefabs/arrowWhite")) as GameObject;
-                newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(400, 500);
-                newObj.GetComponent<Shape>().SetShapeBlink(Random.Range(10, 30) / 40.0f);
                 break;
             case "lightning":
                 newObj = Instantiate(Resources.Load("Prefabs/lightningWhite")) as GameObject;
-                newObj.GetComponent<Shape>().SetShapeTeleport(Random.Range(200, 300), (int)(Random.Range(0, 120)));
                 break;
         }
 
@@ -144,6 +135,10 @@ public class LevelManager : MonoBehaviour
     {
         // Adjusts Scale (levelData[5] can range from 0-4)
         float randomScale = 1 + levelData[5] * ((Random.Range(0, 50)) / 40);
+		if (newObj.GetComponent<Shape>().shapeGeometry == "lightning" && randomScale < 1.2)
+		{
+			randomScale += 0.2f;
+		}
         newObj.transform.localScale = new Vector3(randomScale, randomScale, 1);
     }
 
@@ -238,25 +233,25 @@ public class LevelManager : MonoBehaviour
     private void SetShapeVelocity(GameObject newObj, float startPosX, float startPosY, int shapeHits, int levelSpeed, int shapeDensity)
     {
         // Sets velocity.
-        float levelMultiplier = 1.0f + 0.2f * levelSpeed;
-        float overallScaleFactor = 1 / (50.0f);
+        float levelMultiplier = 0.4f + 0.2f * levelSpeed;
+        float overallScaleFactor = 1 / (100.0f);
         float screenVelScaleFact = 1.0f / screenScaling;
         float shapeSizeSpeedMultiplier = 1 - Mathf.CeilToInt(newObj.transform.localScale.x) / 10;
         float shapeHitsSpeedMultiplier = (float)(1 / (1 + (shapeHits * 0.5)));
-        float speedMultiplier = ((Random.Range(1000, 2000) / 20.0f) * levelMultiplier * shapeHitsSpeedMultiplier * shapeSizeSpeedMultiplier);
+        float speedMultiplier = ((Random.Range(1000, 5000) / 20.0f) * levelMultiplier * shapeHitsSpeedMultiplier * shapeSizeSpeedMultiplier);
         float normalizeSpeedX = (Math.Abs((startPosX - Screen.width / 2) / (startPosY - Screen.height / 2)));
         float normalizeSpeedY = 1;
-        float distFromCenterX = Random.Range(-Screen.width / 4, Screen.width / 4); // no scaling
-        float distFromCenterY = Random.Range(-Screen.height / 4, Screen.height / 4); // no scaling
+		float distFromCenterX = 0;//Random.Range(-Screen.width / 1000, Screen.width / 100); // no scaling
+		float distFromCenterY = 0;//Random.Range(-Screen.height / 1000, Screen.height / 100); // no scaling
         float normalizeFactorX = -((startPosX - Screen.width / 2 + distFromCenterX) / Math.Abs(startPosX - Screen.width / 2) * (50.0f / shapeDensity));
         float normalizeFactorY = -((startPosY - Screen.height / 2 + distFromCenterY) / Math.Abs(startPosY - Screen.height / 2) * (50.0f / shapeDensity));
         float velocityX = normalizeSpeedX * normalizeFactorX * speedMultiplier * overallScaleFactor * screenScaling;
         float velocityY = normalizeSpeedY * normalizeFactorY * speedMultiplier * overallScaleFactor * screenScaling;
 
-        while ((Math.Abs(velocityX) < 35 * screenScaling) || (Math.Abs(velocityY) < 35 * screenScaling))
+        while ((Math.Abs(velocityX) < 25 * screenScaling) || (Math.Abs(velocityY) < 25 * screenScaling))
         {
-            velocityX *= 2;
-            velocityY *= 2;
+			velocityX *= 2; // this didn't work: 2 * normalizeSpeedX * screenScaling * Math.Sign(velocityX);
+			velocityY *= 2;
         }
         while ((Math.Abs(velocityX) > 300 * screenScaling) || (Math.Abs(velocityY) > 300 * screenScaling))
         {
@@ -265,8 +260,9 @@ public class LevelManager : MonoBehaviour
         }
 
         newObj.transform.GetComponent<Rigidbody2D>().velocity = new Vector2(velocityX, velocityY);
-        totalSpeedX += Math.Abs(velocityX);
     }
+
+
 
     private void SetShapeColors(GameObject newObj, int shapeHits)
     {
@@ -296,14 +292,81 @@ public class LevelManager : MonoBehaviour
                 shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
                 break;
             case 8:
-                shapeColor = new Color(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
+                shapeColor = new Color(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 180.0f / 255.0f);
                 break;
         }
 
         newObj.transform.GetComponent<Image>().color = shapeColor;
     }
 
-    void Pause()
+    private void FinishingShapeTouches(GameObject newObj, float levelDifficulty, int index)
+    {
+		// Redistributes shapes to come in more evenly.
+		Rigidbody2D rb = newObj.GetComponent<Rigidbody2D>();
+		float velMag = (float)Math.Sqrt(Math.Pow(rb.velocity.x, 2) + Math.Pow(rb.velocity.y, 2));
+		Vector3 currPos = newObj.GetComponent<RectTransform>().position;
+		Vector3 screen = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+
+		// Redistributes slow shapes.
+		for (int i = 50; i > 2; i--)
+		{
+			if (velMag < 95 && ((Math.Abs(currPos.x - Screen.width / 2) > Screen.width * i + 100) || (Math.Abs(currPos.y - Screen.height / 2) > Screen.height * i + 100)))
+			{
+				newObj.transform.position = Vector3.MoveTowards(newObj.transform.position, screen, screen.magnitude * ((float)(i - 1.0f)));
+				break;
+			}
+		}
+		
+
+		//Redistributes fast shapes.
+		Vector3 reflectVect;
+		if (velMag > 210 && ((Math.Abs(currPos.x - Screen.width / 2) < Screen.width * 2) || (Math.Abs(currPos.y - Screen.height / 2) < Screen.height * 2)))
+		{
+			reflectVect = Vector3.MoveTowards(newObj.transform.position, screen, screen.magnitude * 9) * -1;
+			newObj.transform.position = reflectVect;
+		}
+		else if (velMag > 225 && ((Math.Abs(currPos.x - Screen.width / 2) < Screen.width * 2) || (Math.Abs(currPos.y - Screen.height / 2) < Screen.height * 2)))
+		{
+			reflectVect = Vector3.MoveTowards(newObj.transform.position, screen, screen.magnitude * 12) * -1;
+			newObj.transform.position = reflectVect;
+		}
+		else if (velMag > 240 && ((Math.Abs(currPos.x - Screen.width / 2) < Screen.width * 2) || (Math.Abs(currPos.y - Screen.height / 2) < Screen.height * 2)))
+		{
+			reflectVect = Vector3.MoveTowards(newObj.transform.position, screen, screen.magnitude * 15) * -1;
+			newObj.transform.position = reflectVect;
+		}
+
+		switch (shapeArr[index])
+		{
+			case "rect":
+				newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(50, 500);
+				newObj.GetComponent<RectTransform>().sizeDelta = new Vector2(25, 100);
+				break;
+			case "triangle":
+				newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(50, 500);
+				newObj.GetComponent<Shape>().SetTriangleProperties(Random.Range(8.0f, 14.0f), Random.Range(4.0f, 8.0f), Random.Range(10.0f, 16.0f), (float)levelDifficulty);
+				break;
+			case "hexagon":
+				newObj.GetComponent<Shape>().SetHexProperties(Random.Range(6.0f, 12.0f), Random.Range(6.0f, 10.0f), Random.Range(4.0f, 8.0f), (float)levelDifficulty);
+				break;
+			case "star":
+				newObj.GetComponent<Rigidbody2D>().angularVelocity = 50;
+				break;
+			case "star10":
+				newObj.GetComponent<Rigidbody2D>().angularVelocity = 500.0f;
+				newObj.GetComponent<Shape>().SetShapeFreq(Random.Range(5, 40) / 10.0f);
+				break;
+			case "arrow":
+				newObj.GetComponent<Rigidbody2D>().angularVelocity = Random.Range(400, 500);
+				newObj.GetComponent<Shape>().SetShapeBlink(Random.Range(10, 30) / 40.0f);
+				break;
+			case "lightning":
+				newObj.GetComponent<Shape>().SetShapeTeleport(Random.Range(100, 160), (int)(Random.Range(0, 240)));
+				break;
+		}
+	}
+
+	void Pause()
     {
         Time.timeScale = 0;
     }
@@ -329,14 +392,14 @@ public class LevelManager : MonoBehaviour
         switch (levelNum)
         {
             case 1:
-                levelSettings = new int[] { 24, 24, 1, 1, 1, 0, 1 };
+                levelSettings = new int[] { 24, 24, 1, 1, 3, 0, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle"};
                 break;
             case 2:
-                levelSettings = new int[] { 30, 60, 1, 1, 1, 0, 1 };
+                levelSettings = new int[] { 30, 60, 1, 1, 4, 0, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -344,7 +407,7 @@ public class LevelManager : MonoBehaviour
                                       "circle", "circle", "circle", "circle", "circle", "circle"};
                 break;
             case 3:
-                levelSettings = new int[] { 25, 75, 1, 1, 1, 1, 1 };
+                levelSettings = new int[] { 25, 75, 1, 1, 2, 1, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -352,7 +415,7 @@ public class LevelManager : MonoBehaviour
                                       "circle"};
                 break;
             case 4:
-                levelSettings = new int[] { 50, 100, 5, 1, 2, 1, 2 };
+                levelSettings = new int[] { 50, 100, 5, 1, 16, 1, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -364,7 +427,7 @@ public class LevelManager : MonoBehaviour
                                       "circle", "circle"};
                 break;
             case 5:
-                levelSettings = new int[] { 40, 120, 5, 1, 5, 1, 1 };
+                levelSettings = new int[] { 40, 120, 3, 1, 13, 1, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -374,7 +437,7 @@ public class LevelManager : MonoBehaviour
                                       "square", "square", "square", "square" };
                 break;
             case 6:
-                levelSettings = new int[] { 60, 180, 2, 1, 2, 1, 2 };
+                levelSettings = new int[] { 60, 180, 2, 1, 5, 1, 3 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -397,7 +460,7 @@ public class LevelManager : MonoBehaviour
                                       "square", "square", "square", "square" };
                 break;
             case 8:
-                levelSettings = new int[] { 60, 240, 2, 1, 2, 2, 4 };
+                levelSettings = new int[] { 54, 240, 4, 2, 28, 2, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -407,12 +470,11 @@ public class LevelManager : MonoBehaviour
                                       "square", "square", "square", "square", "square", "square",
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon"};
 
                 break;
             case 9:
-                levelSettings = new int[] { 72, 72, 2, 1, 60, 3, 1 };
+                levelSettings = new int[] { 72, 72, 4, 3, 30, 3, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -436,7 +498,7 @@ public class LevelManager : MonoBehaviour
                                       "ring", "ring", "ring", "ring", "ring", "ring"};
                 break;
             case 11:
-                levelSettings = new int[] { 72, 144, 2, 1, 30, 2, 1 };
+                levelSettings = new int[] { 72, 144, 6, 1, 30, 2, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -452,7 +514,7 @@ public class LevelManager : MonoBehaviour
                                       "star", "star", "star", "star", "star", "star"};
                 break;
             case 12:
-                levelSettings = new int[] { 84, 504, 3, 1, 60, 2, 1 };
+                levelSettings = new int[] { 84, 504, 1, 1, 60, 2, 1 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -469,7 +531,7 @@ public class LevelManager : MonoBehaviour
                                       "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
                 break;
             case 13:
-                levelSettings = new int[] { 102, 306, 4, 1, 100, 3, 1 };
+                levelSettings = new int[] { 102, 306, 2, 1, 60, 3, 2 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -489,7 +551,7 @@ public class LevelManager : MonoBehaviour
                                       "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
                 break;
             case 14:
-                levelSettings = new int[] { 90, 360, 5, 1, 120, 3, 1 };
+                levelSettings = new int[] { 90, 360, 8, 1, 20, 3, 4 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
@@ -508,40 +570,32 @@ public class LevelManager : MonoBehaviour
                 break;
 
             case 15:
-                levelSettings = new int[] { 126, 126, 1, 1, 1, 3, 2 };
+                levelSettings = new int[] { 126, 126, 4, 1, 10, 1, 3 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
+									  "circle", "circle", "circle", "circle", "circle", "circle",
+									  "circle", "circle", "circle", "circle", "circle", "circle",
+									  "circle", "circle", "circle", "circle", "circle", "circle",
+									  "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
                                       "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "rect", "rect", "rect", "rect", "rect", "rect",
+                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
                                       "square", "square", "square", "square", "square", "square",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
-                                      "diamond", "diamond", "diamond", "diamond", "diamond", "diamond",
                                       "square", "square", "square", "square", "square", "square",
-                                      "square", "square", "square", "square", "square", "square",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon",
-                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
-                                      "arrow", "arrow", "arrow", "arrow", "arrow", "arrow",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
-                                      "triangle", "triangle", "triangle", "triangle", "triangle", "triangle"};
+									  "square", "square", "square", "square", "square", "square",
+									  "square", "square", "square", "square", "square", "square",
+									  "rect", "rect", "rect", "rect", "rect", "rect",
+									  "rect", "rect", "rect", "rect", "rect", "rect",
+									  "rect", "rect", "rect", "rect", "rect", "rect",
+									  "rect", "rect", "rect", "rect", "rect", "rect",
+									  "square", "square", "square", "square", "square", "square",
+									  "square", "square", "square", "square", "square", "square",
+									  "square", "square", "square", "square", "square", "square",
+									  "square", "square", "square", "square", "square", "square",
+									  "square", "square", "square", "square", "square", "square"};
                 break;
             case 16:
-                levelSettings = new int[] { 114, 798, 1, 1, 1, 4, 4 };
+                levelSettings = new int[] { 66, 462, 1, 1, 1, 1, 4 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
-                                      "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
@@ -554,7 +608,7 @@ public class LevelManager : MonoBehaviour
                                       "circle", "circle", "circle", "circle", "circle", "circle"};
                 break;
             case 17:
-                levelSettings = new int[] { 90, 360, 1, 1, 10, 4, 3 };
+                levelSettings = new int[] { 90, 180, 4, 5, 30, 4, 3 };
                 shapeArr = new string[] {"triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
                                       "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
                                       "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",
@@ -572,7 +626,7 @@ public class LevelManager : MonoBehaviour
                                       "hexagon", "hexagon", "hexagon", "hexagon", "hexagon", "hexagon" };
                 break;
             case 18:
-                levelSettings = new int[] { 96, 72, 2, 1, 60, 3, 1 };
+                levelSettings = new int[] { 96, 72, 30, 1, 60, 4, 1 };
                 shapeArr = new string[] {"star10", "star10", "star10", "star10", "star10", "star10",
                                       "star10", "star10", "star10", "star10", "star10", "star10",
                                       "star10", "star10", "star10", "star10", "star10", "star10",
@@ -591,18 +645,18 @@ public class LevelManager : MonoBehaviour
                                       "star10", "star10", "star10", "star10", "star10", "star10"};
                 break;
             case 19:
-                levelSettings = new int[] { 114, 72, 2, 1, 60, 3, 1 };
+                levelSettings = new int[] { 114, 228, 2, 1, 30, 4, 4 };
                 shapeArr = new string[] {"lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
-                                      "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
+                                      "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "star", "star", "star", "star", "star", "star",
+									  "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
                                       "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
                                       "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
                                       "lightning", "lightning", "lightning", "lightning", "lightning", "lightning",
@@ -613,7 +667,7 @@ public class LevelManager : MonoBehaviour
                                       "lightning", "lightning", "lightning", "lightning", "lightning", "lightning"};
                 break;
             case 20:
-                levelSettings = new int[] { 144, 1152, 2, 1, 60, 3, 1 };
+                levelSettings = new int[] { 144, 1152, 1, 4, 60, 3, 3 };
                 shapeArr = new string[] {"circle", "circle", "circle", "circle", "circle", "circle",
                                       "circle", "circle", "circle", "circle", "circle", "circle",
                                       "triangle", "triangle", "triangle", "triangle", "triangle", "triangle",

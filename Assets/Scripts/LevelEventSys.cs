@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System;
+using System.Linq;
 using UnityEngine.EventSystems;
-using System.Collections;
-using System.Collections.Generic;
+using Random = UnityEngine.Random;
+
 
 public class LevelEventSys : MonoBehaviour
 {
@@ -11,11 +13,13 @@ public class LevelEventSys : MonoBehaviour
     private bool pauseMenuActive;
     private bool levelWonBool;
     private bool levelLostBool;
+	private bool movedCloserBool;
 
     private int[] levelData;
     private int[] allShapeHits;
     private int lives;
     private int shapesLeftVal;
+	private int lastShapeCheckedIdx;
 
     private float[] shapeSizes;
     private float screenScaling;
@@ -25,8 +29,9 @@ public class LevelEventSys : MonoBehaviour
 
     private Rect screenRect;
     private Rect exitRect;
+	private Rect exitRectLarge;
 
-    private GameObject[] levelShapes;
+	private GameObject[] levelShapes;
 
     private Text shapesLeftText;
     private Text scoreText;
@@ -40,7 +45,7 @@ public class LevelEventSys : MonoBehaviour
         screenScaling = Screen.width / 808.0f;
         print("Initialized Level: " + curLevel);
 
-        InitScene();
+        InitScene();	
     }
 
     void InitScene()
@@ -50,8 +55,9 @@ public class LevelEventSys : MonoBehaviour
         TimeScaleSetToOne();
         pauseMenuActive = false;
         lives = 3; 
-        screenRect = new Rect(0, 0, Screen.width, Screen.height);
-        exitRect = new Rect(-400 * screenScaling, -400 * screenScaling, Screen.width + 800 * screenScaling, Screen.height + 800 * screenScaling);
+        screenRect = new Rect(50 * screenScaling, 50 * screenScaling, Screen.width - 100 * screenScaling, Screen.height - 100 * screenScaling);
+		exitRect = new Rect(-50 * screenScaling, -50 * screenScaling, Screen.width + 100 * screenScaling, Screen.height + 100 * screenScaling);
+		exitRectLarge = new Rect(-180 * screenScaling, -180 * screenScaling, Screen.width + 360 * screenScaling, Screen.height + 360 * screenScaling);
         shapesEntered = new bool[levelShapes.Length];
 
         shapesLeftText = GameObject.Find("shapesLeftVal").GetComponent<Text>();
@@ -170,7 +176,7 @@ public class LevelEventSys : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene(2, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
-    void EscPressed()
+    private void EscPressed()
     {
         if (levelWonBool == false && levelLostBool == false)
         {
@@ -185,7 +191,7 @@ public class LevelEventSys : MonoBehaviour
         }
     }
 
-    void RPressed(string fromMenu)
+    private void RPressed(string fromMenu)
     {
         if (fromMenu == "pause")
         {
@@ -201,7 +207,65 @@ public class LevelEventSys : MonoBehaviour
         }
     }
 
-    void Update()
+	private void FPressed()
+	{
+		if (!(Time.timeScale == 0))
+		{
+			Sprite ffOff = Resources.Load<Sprite>("Sprites/Common/fastforward-white");
+			Sprite ffOn = Resources.Load<Sprite>("Sprites/Common/fastforward-gray");
+			Toggle ffToggle = GameObject.Find("fastForwardToggle").GetComponent<Toggle>();
+			Image ffImg = GameObject.Find("fastForwardImage").GetComponent<Image>();
+
+			if (ffToggle.isOn == true)
+			{
+				ffImg.sprite = ffOff;
+				Time.timeScale = 1;
+				ffToggle.isOn = false;
+			}
+			else
+			{
+				ffImg.sprite = ffOn;
+				Time.timeScale = 2;
+				ffToggle.isOn = true;
+			}
+		}
+	}
+
+	private void SetShapeVelocity(GameObject newObj, float startPosX, float startPosY, int shapeHits, int levelSpeed, int shapeDensity)
+	{
+		// Sets velocity
+		float levelMultiplier = 0.4f + 0.2f * levelSpeed;
+		float overallScaleFactor = 1 / (100.0f);
+		float screenVelScaleFact = 1.0f / screenScaling;
+		float shapeSizeSpeedMultiplier = 1 - Mathf.CeilToInt(newObj.transform.localScale.x) / 10;
+		float shapeHitsSpeedMultiplier = (float)(1 / (1 + (shapeHits * 0.5)));
+		float speedMultiplier = ((Random.Range(1000, 5000) / 20.0f) * levelMultiplier * shapeHitsSpeedMultiplier * shapeSizeSpeedMultiplier);
+		float normalizeSpeedX = (Math.Abs((startPosX - Screen.width / 2) / (startPosY - Screen.height / 2)));
+		float normalizeSpeedY = 1;
+		float distFromCenterX = Random.Range(-Screen.width / 1000, Screen.width / 100); // no scaling
+		float distFromCenterY = Random.Range(-Screen.height / 1000, Screen.height / 100); // no scaling
+		float normalizeFactorX = -((startPosX - Screen.width / 2 + distFromCenterX) / Math.Abs(startPosX - Screen.width / 2) * (50.0f / shapeDensity));
+		float normalizeFactorY = -((startPosY - Screen.height / 2 + distFromCenterY) / Math.Abs(startPosY - Screen.height / 2) * (50.0f / shapeDensity));
+		float velocityX = normalizeSpeedX * normalizeFactorX * speedMultiplier * overallScaleFactor * screenScaling;
+		float velocityY = normalizeSpeedY * normalizeFactorY * speedMultiplier * overallScaleFactor * screenScaling;
+
+		while ((Math.Abs(velocityX) < 25 * screenScaling) || (Math.Abs(velocityY) < 25 * screenScaling))
+		{
+			velocityX += 2 * normalizeSpeedX * screenScaling * Math.Sign(velocityX);
+			velocityY += 2 * normalizeSpeedY * screenScaling * Math.Sign(velocityY);
+		}
+		while ((Math.Abs(velocityX) > 300 * screenScaling) || (Math.Abs(velocityY) > 300 * screenScaling))
+		{
+			velocityX /= 2;
+			velocityY /= 2;
+		}
+
+		//Do something for hexagons and triangles oscillation
+
+		newObj.transform.GetComponent<Rigidbody2D>().velocity = new Vector2(velocityX, velocityY);
+	}
+
+	void Update()
     {
         // Sequential checks on shape parameters.
         for (int i = 0; i < levelShapes.Length; i++)
@@ -215,34 +279,88 @@ public class LevelEventSys : MonoBehaviour
                     shapesEntered[i] = true;
                 }
 
-                // Checks to see if life was lost.
-                if (!(exitRect.Contains(shapePos)) && shapesEntered[i])
-                {
-                    lives -= 1;
-                    int tempVal = int.Parse(shapesLeftStripped.Remove(0, 15));
-                    tempVal -= 1;
-                    shapesLeftText.text = "Shapes Left:   " + tempVal.ToString();
-                    switch (lives)
-                    {
-                        case 2:
-                            GameObject heart3 = GameObject.Find("heart3");
-                            Destroy(heart3);
-                            break;
-                        case 1:
-                            GameObject heart2 = GameObject.Find("heart2");
-                            Destroy(heart2);
-                            break;
-                        case 0:
-                            GameObject heart1 = GameObject.Find("heart1");
-                            Destroy(heart1);
-                            LoseScene();
-                            break;
-                    }
+				// Corrects for shapes not going through screen
+				Rigidbody2D rb = levelShapes[i].GetComponent<Rigidbody2D>();
+				Vector2 rbVel = rb.velocity;
+				bool tooHigh = (rbVel.y > 0) && (shapePos.y > Screen.height * 1.1);
+				bool tooLow = (rbVel.y < 0) && (shapePos.y < -Screen.height * 1.1);
+				bool tooRight = (rbVel.x > 0) && (shapePos.x > Screen.width * 1.1);
+				bool tooLeft = (rbVel.x < 0) && (shapePos.x < -Screen.width * 1.1);
+				if (shapesEntered[i] == false && (tooHigh || tooLow || tooRight || tooLeft))
+				{
+					print("correcting shape");
+					print(levelShapes[i].GetComponent<Shape>().shapeGeometry);
+					SetShapeVelocity(levelShapes[i], levelShapes[i].transform.position.x, levelShapes[i].transform.position.y,
+						levelShapes[i].GetComponent<Shape>().shapeHits, levelData[2], levelData[4]);
+				}
 
-                    Destroy(levelShapes[i]);
+				// Checks to see if life was lost
+				string[] shapeGeometryList = new string[] { "lightning", "triangle", "hexagon" };
+				bool specialObj = shapeGeometryList.Contains(levelShapes[i].GetComponent<Shape>().shapeGeometry);
+				bool lifeLost = false;
+				float shapeHeight = levelShapes[i].GetComponent<RectTransform>().rect.height;
+				float shapeWidth = levelShapes[i].GetComponent<RectTransform>().rect.width;
+				Rect exitRectNew = new Rect(exitRect.x - shapeWidth / 2, exitRect.y - shapeHeight / 2, exitRect.width + shapeWidth, exitRect.height + shapeHeight);
+				Rect exitRectLargeNew = new Rect(exitRectLarge.x - shapeWidth / 2, exitRectLarge.y - shapeHeight / 2, exitRectLarge.width + shapeWidth, exitRectLarge.height + shapeHeight);
+				if (!(exitRectNew.Contains(shapePos)) && shapesEntered[i] && specialObj == false)
+                {
+					lifeLost = true;
                 }
-            }
+				else if (!(exitRectLargeNew.Contains(shapePos)) && shapesEntered[i] && specialObj)
+				{
+					print(shapesEntered[i]);
+
+					lifeLost = true;
+				}
+
+				if (lifeLost)
+				{
+					lives -= 1;
+					int tempVal = int.Parse(shapesLeftText.text.Remove(0, 15));
+					tempVal -= 1;
+					shapesLeftText.text = "Shapes Left:   " + tempVal.ToString();
+					switch (lives)
+					{
+						case 2:
+							GameObject heart3 = GameObject.Find("heart3");
+							Destroy(heart3);
+							break;
+						case 1:
+							GameObject heart2 = GameObject.Find("heart2");
+							Destroy(heart2);
+							break;
+						case 0:
+							GameObject heart1 = GameObject.Find("heart1");
+							Destroy(heart1);
+							LoseScene();
+							break;
+					}
+
+					Destroy(levelShapes[i]);
+				}
+
+				// If last few shapes are far away, move closer
+				if (int.Parse(shapesLeftText.text.Remove(0, 15)) < 13 && int.Parse(shapesLeftText.text.Remove(0, 15)) > 0)
+				{
+					Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+					float dist = Vector3.Distance(shapePos, screenCenter);
+					if (dist > 2 * screenCenter.magnitude)
+					{
+						print("moving last object closer");
+						levelShapes[i].transform.position = Vector3.MoveTowards(levelShapes[i].transform.position, screenCenter,
+																			  screenCenter.magnitude);
+					}
+				}
+			}
         }
+
+		// Deals with points
+		if (Time.timeScale == 2)
+		{
+			int scoreVal = int.Parse(scoreText.text.Remove(0, 9));
+			scoreVal += 1;
+			scoreText.text = "Score:   " + scoreVal.ToString();
+		}
 
         // Wins the level.
         shapesLeftVal = int.Parse(shapesLeftText.text.Remove(0, 15));
@@ -275,5 +393,10 @@ public class LevelEventSys : MonoBehaviour
                 RPressed("lose");
             }
         }
+
+		if ((Event.current.Equals(Event.KeyboardEvent("f"))) && (levelWonBool == false) && pauseMenuActive == false)
+		{
+			FPressed();
+		}
     }
 }

@@ -41,21 +41,20 @@ public class Shape : MonoBehaviour {
         shapeFrequency = setFreq;
     }
 
-    public void SetTriangleProperties(float freq, float amp, float moveSpeed)
+    public void SetTriangleProperties(float freq, float amp, float moveSpeed, float globalScale)
     {
-        float globalScale = 0.5f;
-        triFreq = freq * globalScale;
+		globalScale /= 8;
+		triFreq = freq * globalScale;
         triAmp = amp * screenScaling * globalScale;
         triMoveSpeed = moveSpeed * screenScaling * globalScale;
     }
 
-    public void SetHexProperties(float freq, float amp, float moveSpeed)
+    public void SetHexProperties(float freq, float amp, float moveSpeed, float globalScale)
     {
-        float globalScale = 0.5f;
-        hexFreq = freq * globalScale;
+		globalScale /= 8;
+		hexFreq = freq * globalScale;
         hexAmp = amp * screenScaling * globalScale;
         hexMoveSpeed = moveSpeed * screenScaling * globalScale;
-        print(screenScaling);
     }
 
     public void SetShapeTeleport(float distance, int time)
@@ -158,28 +157,28 @@ public class Shape : MonoBehaviour {
                     currTime = ((int)(Time.time));
                     Vector3 currPos = transform.position;
                     Vector3 translation;
-                    int transformDir = (Time.frameCount + timeOffset) % 160;
+                    int transformDir = (Time.frameCount + timeOffset) % 320;
 
-                    if (transformDir == 30 && dontMoveRight == false)
+                    if (transformDir == 60 && dontMoveRight == false)
                     {
                         translation = new Vector3(teleportDist, 0, 0);
                         transform.Translate(translation);
                         dontMoveRight = true;
                         dontMoveDown = false;
                     }
-                    else if (transformDir == 70 && dontMoveUp == false)
+                    else if (transformDir == 140 && dontMoveUp == false)
                     {
                         translation = new Vector3(0, teleportDist, 0);
                         transform.Translate(translation);
                         dontMoveUp = true;
                     }
-                    else if (transformDir == 110 && dontMoveLeft == false)
+                    else if (transformDir == 220 && dontMoveLeft == false)
                     {
                         translation = new Vector3(-teleportDist, 0, 0);
                         transform.Translate(translation);
                         dontMoveLeft = true;
                     }
-                    else if (transformDir == 150 && dontMoveDown == false)
+                    else if (transformDir == 300 && dontMoveDown == false)
                     {
                         translation = new Vector3(0, -teleportDist, 0);
                         transform.Translate(translation);
@@ -219,10 +218,10 @@ public class Shape : MonoBehaviour {
                 shapeColor = new Color(255.0f / 255.0f, 139.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
                 break;
             case 7:
-                shapeColor = new Color(225.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
+                shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
                 break;
             case 8:
-                shapeColor = new Color(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
+                shapeColor = new Color(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 180.0f / 255.0f);
                 break;
         }
 
