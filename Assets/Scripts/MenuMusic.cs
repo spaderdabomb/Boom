@@ -61,5 +61,31 @@ namespace DigitalRuby.SoundManagerNamespace
 			Slider music_slider = GameObject.Find("musicSlider").GetComponent<Slider>();
 			SoundManager.MusicVolume = music_slider.value;
 		}
+
+		public void PlayRandomSound()
+		{
+			int randInt = (int)Random.Range(0.0f, 100.0f);
+			AudioSource coinSound = GameObject.Find("coinAudio").GetComponent<AudioSource>();
+			AudioSource boomSound = GameObject.Find("boomAudio").GetComponent<AudioSource>();
+			AudioSource confettiSound = GameObject.Find("confettiAudio").GetComponent<AudioSource>();
+			AudioSource popSound = GameObject.Find("popAudio").GetComponent<AudioSource>();
+
+			if (randInt <= 50)
+			{
+				boomSound.PlayOneShotSoundManaged(boomSound.clip);
+			}
+			else if (randInt > 50 && randInt <= 80)
+			{
+				popSound.PlayOneShotSoundManaged(popSound.clip);
+			}
+			else if (randInt > 80 && randInt <= 90)
+			{
+				coinSound.PlayOneShotSoundManaged(coinSound.clip);
+			}
+			else if (randInt > 90 && randInt <= 100)
+			{
+				confettiSound.PlayOneShotSoundManaged(confettiSound.clip);
+			}
+		}
 	}
 }

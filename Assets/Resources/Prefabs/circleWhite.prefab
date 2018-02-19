@@ -20,11 +20,12 @@ GameObject:
   m_Component:
   - component: {fileID: 224780235717282096}
   - component: {fileID: 222631086503731678}
-  - component: {fileID: 114349258421910440}
   - component: {fileID: 50536274892160072}
   - component: {fileID: 114010577104518982}
   - component: {fileID: 114893528878951262}
   - component: {fileID: 58785386466152906}
+  - component: {fileID: 114349258421910440}
+  - component: {fileID: 114014883152034226}
   m_Layer: 0
   m_Name: circleWhite
   m_TagString: Untagged
@@ -80,6 +81,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shapeHits: 0
   shapeGeometry: circle
+  menuMusic: {fileID: 114014883152034226}
+--- !u!114 &114014883152034226
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1096600229020234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a2084404d7341fca3ee8a94b458878, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114349258421910440
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -132,7 +145,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1096600229020234}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -122.29627}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -140,6 +153,6 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1942.2717, y: 122.52136}
+  m_AnchoredPosition: {x: -610, y: 0.000030518}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}

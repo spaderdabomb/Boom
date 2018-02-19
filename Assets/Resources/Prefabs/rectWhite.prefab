@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 114010577104518982}
   - component: {fileID: 114893528878951262}
   - component: {fileID: 61925062379645660}
+  - component: {fileID: 114208483528463174}
   m_Layer: 0
   m_Name: rectWhite
   m_TagString: Untagged
@@ -90,6 +91,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shapeHits: 0
   shapeGeometry: rect
+  menuMusic: {fileID: 114208483528463174}
+--- !u!114 &114208483528463174
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1096600229020234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38a2084404d7341fca3ee8a94b458878, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114349258421910440
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -142,7 +155,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1096600229020234}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -122.29627}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

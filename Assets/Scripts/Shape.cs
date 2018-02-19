@@ -8,6 +8,8 @@ public class Shape : MonoBehaviour {
 
     public int shapeHits;
     public string shapeGeometry;
+	public DigitalRuby.SoundManagerNamespace.MenuMusic menuMusic;
+
     private float shapeFrequency;
     private float teleportDist;
     private float blinkTime;
@@ -68,7 +70,7 @@ public class Shape : MonoBehaviour {
         blinkTime = objBlinkTime;
     }
 
-    void Update()
+	void Update()
     {
         // If clicked.
         if ((int)Time.timeScale == 1 || (int)Time.timeScale == 2)
@@ -96,6 +98,8 @@ public class Shape : MonoBehaviour {
                             int scoreVal = int.Parse(scoreText.text.Remove(0, 9));
                             scoreVal += 100;
                             scoreText.text = "Score:   " + scoreVal.ToString();
+
+							menuMusic.PlayRandomSound();
 
                             Destroy(myObj);
                         }
@@ -197,36 +201,35 @@ public class Shape : MonoBehaviour {
     {
         Color shapeColor = new Color(0, 0, 0, 0);
 
-        switch (shapeHits)
-        {
-            case 1:
-                shapeColor = new Color(255.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 2:
-                shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 3:
-                shapeColor = new Color(0.0f / 255.0f, 77.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 4:
-                shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 81.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 5:
-                shapeColor = new Color(255.0f / 255.0f, 255.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 6:
-                shapeColor = new Color(255.0f / 255.0f, 139.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 7:
-                shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 8:
-                shapeColor = new Color(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 180.0f / 255.0f);
-                break;
-        }
+		switch (shapeHits)
+		{
+			case 1:
+				shapeColor = new Color(255.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 2:
+				shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 3:
+				shapeColor = new Color(0.0f / 255.0f, 77.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 4:
+				shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 81.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 5:
+				shapeColor = new Color(255.0f / 255.0f, 255.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 6:
+				shapeColor = new Color(255.0f / 255.0f, 139.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 7:
+				shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
+				break;
+			case 8:
+				shapeColor = new Color(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 180.0f / 255.0f);
+				break;
+		}
 
-        newObj.transform.GetComponent<Image>().color = shapeColor;
-
-    }
+		newObj.transform.GetComponent<Image>().color = shapeColor;
+	}
 
 }

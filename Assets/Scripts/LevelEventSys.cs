@@ -352,7 +352,7 @@ public class LevelEventSys : MonoBehaviour
 					}
 				}
 			}
-        }
+		}
 
 		// Deals with points
 		if (Time.timeScale == 2)
@@ -368,9 +368,11 @@ public class LevelEventSys : MonoBehaviour
         {
             WinScene();
         }
-    }
 
-    private void OnGUI()
+
+	}
+
+	private void OnGUI()
     {
         // Pauses/unpauses level
         if ((Event.current.Equals(Event.KeyboardEvent("escape"))) && (levelWonBool == false))

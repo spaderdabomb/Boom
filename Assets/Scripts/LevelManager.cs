@@ -53,13 +53,12 @@ public class LevelManager : MonoBehaviour
             float startPosY = screenScaling * (2 * waveMultiplier * (Screen.height / 2 + Random.Range(400.0f, 700.0f + (100.0f * levelData[4])) * (Random.Range(0, 2) * 2 - 1)));
             Vector3 pos = new Vector3(startPosX, startPosY, 0);
             newObj.transform.position = pos;
-			print(newObj.GetComponent<RectTransform>().position.z);
 
             allShapeHits[i] = SetShapeHits(newObj, totalShapeHits, levelData, allShapeHits[i], avgShapeHits, i);
             SetShapeScale(newObj, levelData);
-            //SetShapeCollider(newObj);
-            SetShapeColors(newObj, allShapeHits[i]);
-            SetShapeVelocity(newObj, startPosX, startPosY, allShapeHits[i], levelData[2], levelData[4]);
+			//SetShapeCollider(newObj);
+			newObj.GetComponent<Shape>().NewShapeColors(newObj, allShapeHits[i]);
+			SetShapeVelocity(newObj, startPosX, startPosY, allShapeHits[i], levelData[2], levelData[4]);
 			FinishingShapeTouches(newObj, levelData[3], i);
 
             shapeHolder[i] = newObj;
@@ -262,43 +261,6 @@ public class LevelManager : MonoBehaviour
         newObj.transform.GetComponent<Rigidbody2D>().velocity = new Vector2(velocityX, velocityY);
     }
 
-
-
-    private void SetShapeColors(GameObject newObj, int shapeHits)
-    {
-        Color shapeColor = new Color(0, 0, 0, 0);
-
-        switch (shapeHits)
-        {
-            case 1:
-                shapeColor = new Color(255.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 2:
-                shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 3:
-                shapeColor = new Color(0.0f / 255.0f, 77.0f / 255.0f, 255.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 4:
-                shapeColor = new Color(0.0f / 255.0f, 255.0f / 255.0f, 81.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 5:
-                shapeColor = new Color(255.0f / 255.0f, 255.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 6:
-                shapeColor = new Color(255.0f / 255.0f, 139.0f / 255.0f, 33.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 7:
-                shapeColor = new Color(225.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 180.0f / 255.0f);
-                break;
-            case 8:
-                shapeColor = new Color(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f, 180.0f / 255.0f);
-                break;
-        }
-
-        newObj.transform.GetComponent<Image>().color = shapeColor;
-    }
-
     private void FinishingShapeTouches(GameObject newObj, float levelDifficulty, int index)
     {
 		// Redistributes shapes to come in more evenly.
@@ -364,6 +326,8 @@ public class LevelManager : MonoBehaviour
 				newObj.GetComponent<Shape>().SetShapeTeleport(Random.Range(100, 160), (int)(Random.Range(0, 240)));
 				break;
 		}
+
+		newObj.transform.localPosition = new Vector3(newObj.transform.localPosition.x, newObj.transform.localPosition.y, 0);
 	}
 
 	void Pause()
